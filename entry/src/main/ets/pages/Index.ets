@@ -16,6 +16,10 @@ struct Index {
           center: { anchor: '__container__', align: VerticalAlign.Center },
           middle: { anchor: '__container__', align: HorizontalAlign.Center }
         })
+      Column({ space: 20 }) {
+        Text('space: 20').fontSize(15).fontColor(Color.Gray).width('90%')
+        Row().width('90%').height(50).backgroundColor(0xF5DEB3)
+      }.width('100%')
       // 添加按钮，以响应用户点击
       Button() {
         Text('Next')
