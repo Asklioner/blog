@@ -36,7 +36,7 @@ struct Index {
       //跳转页面
      .onClick(()=>{
        console.info('Welcome')
-       router.pushUrl({url:'pages/Second'}).then(()=>{
+       router.pushUrl({url:'pages/main_page'}).then(()=>{
          console.info('Success in jumping Second page')
        }).catch((err:BusinessError)=>{
          console.error(`Failed to Second page.Code is ${err.code},message is ${err.message}`)

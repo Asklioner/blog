@@ -1,10 +1,14 @@
-// Second.ets
+
 import { router } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
+import {CommonConstants} from '../entryability/CommonConstants'
+import {CardItemInterface} from '../models/CardListModel'
+import { CardItem } from '../models/CardViewModel'
 import { WaterFlowDataSource } from '../entryability/WaterFlowDataSource'
 @Entry
 @Component
 struct Second {
+  @State cardItem: CardItem = new CardItem({} as CardItemInterface, 0)
   @State minSize: number = 80
   @State maxSize: number = 180
   @State fontSize: number = 24
@@ -49,7 +53,6 @@ struct Second {
 
   build() {
     Column() {
-
       Tabs({
         barPosition: BarPosition.End,
         controller: this.controller,
@@ -59,14 +62,71 @@ struct Second {
             LazyForEach(this.dataSource,(item:number)=>{
               FlowItem() {
                 Column() {
-                  Text("N" + item).fontSize(12).height('16')
-                  Image('res/waterFlowTest(' + item % 5 + ').jpg')
-                    .objectFit(ImageFit.Fill)
-                    .width('100%')
-                    .layoutWeight(1)
+                  Row(){
+                    Row(){
+                      //this.CardItem.Image
+                      Image('./image/kmxo6gb2.png')
+                        .width($r('app.float.blog_icon_width'))
+                        .aspectRatio(1)
+                        .borderRadius($r('app.float.blog_icon_br'))
+                      Column(){
+                        Text('原神')
+                          .fontSize($r('app.float.blog_name_fs'))
+                          .fontWeight(500)
+                          .height($r('app.float.blog_name_height'))
+                        Text('米哈游')
+                          .fontWeight(FontWeight.Normal)
+                          .fontSize($r('app.float.author_type_fs'))
+                          .height($r('app.float.author_type_height'))
+                      }
+                      .margin({ left: $r('app.float.blog_title_ml') })
+                      .justifyContent(FlexAlign.Start)
+                      .alignItems(HorizontalAlign.Start)
+                    }
+                    .justifyContent(FlexAlign.Start)
+                    Row() {
+                      Text('关注')
+                        .fontSize($r('app.float.follow_font_size'))
+                        .margin({ left: $r('app.float.follow_margin_left') })
+                    }
+                    .borderRadius($r('app.float.blog_title_follow_br'))
+                    .padding({
+                      left: $r('app.float.blog_title_padding_left'),
+                      right: $r('app.float.blog_title_padding_left')
+                    })
+                    .width($r('app.float.blog_title_follow_width'))
+                    .height($r('app.float.blog_title_follow_height'))
+                  }
+                  .justifyContent(FlexAlign.SpaceBetween)
+                  .width("100%")
+                  .padding({
+                    top: $r('app.float.card_title_padding'),
+                    bottom: $r('app.float.card_title_padding')
+                  })
+                  Row() {
+                    //this.CardItem.Comment
+                    Text('《原神》是一款全新开放世界冒险RPG。你将在游戏中探索一个被称作「提瓦特」的幻想世界。')
+                      .fontSize(`fp`)
+                      .lineHeight(`vp`)
+                      .width("100%")
+                      .onClick(() => {
+                        //this.jumpDetail();
+                      })
+                      .copyOption(CopyOptions.LocalDevice)
+                      .fontColor("black")
+                  }
                 }
               }
-            })
+              .onAppear(()=>{
+                if (item + 20 == this.dataSource.totalCount()) {
+                  for (let i = 0; i < 100; i++) {
+                    this.dataSource.addLastItem()
+                  }
+                }
+              })
+              .width('100%')
+              .height(this.itemHeightArray[10])
+            }, (item: string) => item)
           }
         }
         .size({width: "100%", height: "100%"})
