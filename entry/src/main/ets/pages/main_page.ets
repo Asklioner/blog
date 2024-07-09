@@ -65,7 +65,7 @@ struct Second {
                   Row(){
                     Row(){
                       //this.CardItem.Image
-                      Image('./image/kmxo6gb2.png')
+                      Image($r('app.media.kmxo6gb2'))
                         .width($r('app.float.blog_icon_width'))
                         .aspectRatio(1)
                         .borderRadius($r('app.float.blog_icon_br'))
@@ -131,16 +131,6 @@ struct Second {
         }
         .size({width: "100%", height: "100%"})
         .tabBar("首页")
-
-
-        TabContent() {
-          Column()
-            .width('100%')
-            .height('100%')
-            .backgroundColor("#bbccaa")
-        }
-        .size({width: "100%", height: "100%"})
-        .tabBar("消息")
 
         TabContent() {
           Column()
