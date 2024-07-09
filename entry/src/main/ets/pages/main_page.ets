@@ -5,6 +5,7 @@ import {CommonConstants} from '../entryability/CommonConstants'
 import {CardItemInterface} from '../models/CardListModel'
 import { CardItem } from '../models/CardViewModel'
 import { WaterFlowDataSource } from '../entryability/WaterFlowDataSource'
+import { http } from '@kit.NetworkKit';
 @Entry
 @Component
 struct Second {
@@ -18,6 +19,8 @@ struct Second {
   private itemWidthArray: number[] = []
   private itemHeightArray: number[] = []
   private controller: TabsController = new TabsController();
+  oldPassword?: string
+  newPassword?: string
 
   // 计算FlowItem宽/高
   getSize() {
@@ -65,7 +68,7 @@ struct Second {
                   Row(){
                     Row(){
                       //this.CardItem.Image
-                      Image($r('app.media.kmxo6gb2'))
+                      Image($r('app.media.icon'))
                         .width($r('app.float.blog_icon_width'))
                         .aspectRatio(1)
                         .borderRadius($r('app.float.blog_icon_br'))
@@ -84,18 +87,18 @@ struct Second {
                       .alignItems(HorizontalAlign.Start)
                     }
                     .justifyContent(FlexAlign.Start)
-                    Row() {
-                      Text('关注')
-                        .fontSize($r('app.float.follow_font_size'))
-                        .margin({ left: $r('app.float.follow_margin_left') })
-                    }
-                    .borderRadius($r('app.float.blog_title_follow_br'))
-                    .padding({
-                      left: $r('app.float.blog_title_padding_left'),
-                      right: $r('app.float.blog_title_padding_left')
-                    })
-                    .width($r('app.float.blog_title_follow_width'))
-                    .height($r('app.float.blog_title_follow_height'))
+                    // Row() {
+                    //   Text('关注')
+                    //     .fontSize($r('app.float.follow_font_size'))
+                    //     .margin({ left: $r('app.float.follow_margin_left') })
+                    // }
+                    // .borderRadius($r('app.float.blog_title_follow_br'))
+                    // .padding({
+                    //   left: $r('app.float.blog_title_padding_left'),
+                    //   right: $r('app.float.blog_title_padding_left')
+                    // })
+                    // .width($r('app.float.blog_title_follow_width'))
+                    // .height($r('app.float.blog_title_follow_height'))
                   }
                   .justifyContent(FlexAlign.SpaceBetween)
                   .width("100%")
@@ -105,7 +108,7 @@ struct Second {
                   })
                   Row() {
                     //this.CardItem.Comment
-                    Text('《原神》是一款全新开放世界冒险RPG。你将在游戏中探索一个被称作「提瓦特」的幻想世界。')
+                    Text('《原神》是一款全新开放世界冒险RPG。你将在游戏中探索一个被称作「提瓦特」的幻想世界。绝区0也是一款非常好玩的游戏！！！！！！！')
                       .fontSize(`fp`)
                       .lineHeight(`vp`)
                       .width("100%")
@@ -130,16 +133,45 @@ struct Second {
           }
         }
         .size({width: "100%", height: "100%"})
-        .tabBar("首页")
+        .tabBar("博客")
 
         TabContent() {
-          Column()
-            .width('100%')
-            .height('100%')
-            .backgroundColor("#ccaabb")
+          Column({space: 20}){
+            Flex({ direction: FlexDirection.Row }){
+              Image($r('app.media.icon')).width('30%').margin({right: 30})
+              //Text(this.CardItem.name).fontSize(40).margin({top: 20})
+              Text('用户名').fontSize(40).margin({top: 20})
+            }.margin(20)
+            TextInput({placeholder: '旧密码'}).onChange((value: string) => {
+              this.oldPassword = value
+            })
+            TextInput({placeholder: '新密码'}).onChange((value: string) => {
+              this.newPassword = value
+            })
+            Button('修改').onClick(() => {
+              let httpRequest = http.createHttp()
+              httpRequest.request(
+                'url',
+                {
+                  method: http.RequestMethod.POST,
+                  //要加用户名
+                  extraData: [this.oldPassword, this.newPassword]
+                },
+                (err: BusinessError, data: http.HttpResponse) => {
+                  if(!err){
+                    //错误码
+                    httpRequest.destroy()
+                  }else{
+                    console.log('请求失败')
+                    httpRequest.destroy()
+                  }
+                }
+              )
+            })
+          }.margin(20)
         }
         .size({width: "100%", height: "100%"})
-        .tabBar("我的")
+        .tabBar("设置")
       }
       .size({width: "100%", height: "100%"})
     }

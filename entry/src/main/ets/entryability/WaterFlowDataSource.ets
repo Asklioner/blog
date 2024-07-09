@@ -1,4 +1,8 @@
 // 实现IDataSource接口的对象，用于瀑布流组件加载数据
+import {CommentItemInterface, CommentItem } from "../models/CommentViewModel"
+import {CardItemInterface} from '../models/CardListModel'
+import {COMMENT_LIST} from '../models/CommentModel'
+import {PICTURE_ARRAY_LIST } from '../models/PictureArrayModel'
 export class WaterFlowDataSource implements IDataSource {
   private dataArray: number[] = []
   private listeners: DataChangeListener[] = []
