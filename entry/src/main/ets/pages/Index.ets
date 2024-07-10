@@ -1,6 +1,11 @@
 import router from '@ohos.router';
 import { http } from '@kit.NetworkKit';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { Response } from '../common/Response';
+import { LoginData } from '../common/LoginData';
+import { httpRequestPost } from '../common/api';
+import { Params } from '../common/params';
+import { LoginParams } from '../common/LoginParams';
 
 
 @CustomDialog
@@ -265,7 +270,7 @@ struct Index {
   dialogController: CustomDialogController = new CustomDialogController({
     builder: CustomDialogExample({
       cancel: () => {},
-      confirm: (username?: string, password?: string) => {this.onConfirm(username, password)}
+      confirm: (email ?: string, password ?: string) => {this.onConfirm(email ?? "", password ?? "")}
     })
   })
 
@@ -306,32 +311,21 @@ struct Index {
     )
   }
 
-  onConfirm(username?: string, password?: string){
+  onConfirm(email: string, password: string){
     //登录提交请求
-    let httpRequest = http.createHttp()
-    router.replaceUrl({
-      url: 'pages/main_page'
-    }, router.RouterMode.Standard)
-    httpRequest.request(
-      'url',
-      {
-        method: http.RequestMethod.POST,
-        extraData: [username, password]
-      },
-      (err: BusinessError, data: http.HttpResponse) => {
-        if(!err){
-          //错误码
-
-          //正确时
-          router.replaceUrl({
-            url: 'pages/Setting'
-          }, router.RouterMode.Standard)
-        }else{
-          console.log('登陆失败')
-        }
-      }
-    )
-
+    let loginParams:LoginParams = new LoginParams(email,password);
+    let response = httpRequestPost("/user/login",loginParams);
+    response.then((res)=>{
+      let response:Response<LoginData> = JSON.parse(res.result.toString());
+      let token = response.data?.token;
+      AppStorage.set("token",token);
+      console.log(token);
+      router.replaceUrl({
+        url: 'pages/main_page'
+      }, router.RouterMode.Standard)
+    }).catch((err:BusinessError)=>{
+      console.log('登陆失败')
+    })
   }
 
   onForget(username?: string, newPassword?: string, email?: string){
@@ -376,3 +370,4 @@ struct Index {
     }
   }
 }
+
