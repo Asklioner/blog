@@ -1,35 +1,145 @@
 // 实现IDataSource接口的对象，用于瀑布流组件加载数据
-import {CommentItemInterface, CommentItem } from "../models/CommentViewModel"
 import {CardItemInterface} from '../models/CardListModel'
-import {COMMENT_LIST} from '../models/CommentModel'
-import {PICTURE_ARRAY_LIST } from '../models/PictureArrayModel'
+import {CardItem} from '../models/CardViewModel'
+import { http } from '@kit.NetworkKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { ArkTSUtils, JSON } from '@kit.ArkTS';
+import { lang } from '@kit.ArkTS';
+// 定义 CardItem 接口
+interface backCardItem {
+  id: number;
+  title: string;
+  authorId: number;
+  content: string;
+  likeCount:number,
+  commentCount:number,
+  createTime:string,
+  updateTime:string
+}
+
+interface parseDataInterface{
+  success:boolean,
+  code:number,
+  message:string,
+  data?:object
+}
+
 export class WaterFlowDataSource implements IDataSource {
-  private dataArray: number[] = []
+  private dataArray: CardItem[] = [];
   private listeners: DataChangeListener[] = []
 
   constructor() {
-    for (let i = 0; i < 100; i++) {
-      this.dataArray.push(i)
-    }
+    this.fetchDataFromBackend();
   }
 
-  // 获取索引对应的数据
-  public getData(index: number): number {
-    return this.dataArray[index]
+  // 从后端获取数据
+  private fetchDataFromBackend(): void {
+    //从后端获取数据
+    let httpRequest = http.createHttp();
+    httpRequest.request(
+      'http://192.168.5.18:8081/blog/all',
+      {
+        method:http.RequestMethod.GET,
+        expectDataType: http.HttpDataType.STRING,
+        header: {
+          'Content-Type': 'application/json',
+        }
+      },
+      (err:BusinessError,data:http.HttpResponse)=>{
+        if (!err && data.resultType === http.HttpDataType.STRING) {
+          try {
+            console.log("responseCode is ...");
+            console.log(data.result.toLocaleString())
+            const parseDate = JSON.parse(data.result.toString()) as parseDataInterface
+            console.info(data.result.toString()+'#######')
+            console.log('Received cards:', this.dataArray)
+            httpRequest.destroy()
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            httpRequest.destroy()
+          }
+        }else{
+          httpRequest.destroy()
+        }
+      }
+    )
+    // 模拟从后端获取数据
+    const newData: CardItemInterface[] = [
+      {
+        icon: 'app.media.icon',
+        name: '原神',
+        authorType: '米哈游',
+        content: '《原神》是一款全新开放世界冒险RPG。你将在游戏中探索一个被称作「提瓦特」的幻想世界。绝区0也是一款非常好玩的游戏！！！！！！！',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '鹰角',
+        content: '最喜欢的一集，你说得对，但是杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '卡普空',
+        content: '但是杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '鹰角',
+        content: '你说得对，但是杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '鹰角',
+        content: '最喜欢的一集。但是杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '鹰角',
+        content: '最喜欢的一集，你说得对，但是杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+      {
+        icon: 'app.media.icon',
+        name: '绝区零',
+        authorType: '鹰角',
+        content: '杭州电子科技大学是一款我的问题',
+        commentList: [],
+      },
+    ];
+
+    // 将新数据转换为 CardItem 并合并到 dataArray 中
+    this.dataArray = this.dataArray.concat(newData.map(item => new CardItem(item)));
   }
+
+
+  // 获取索引对应的数据
+  public getData(index: number): CardItem {
+    return this.dataArray[index];
+  }
+
 
   // 通知控制器数据重新加载
   notifyDataReload(): void {
     this.listeners.forEach(listener => {
-      listener.onDataReloaded()
-    })
+      listener.onDataReloaded();
+    });
   }
+
 
   // 通知控制器数据增加
   notifyDataAdd(index: number): void {
     this.listeners.forEach(listener => {
-      listener.onDataAdd(index)
-    })
+      listener.onDataAdd(index);
+    });
   }
 
   // 通知控制器数据变化
@@ -81,21 +191,21 @@ export class WaterFlowDataSource implements IDataSource {
   }
 
   // 增加数据
-  public add1stItem(): void {
-    this.dataArray.splice(0, 0, this.dataArray.length)
-    this.notifyDataAdd(0)
+  public add1stItem(item: CardItem): void {
+    this.dataArray.splice(0, 0, item);
+    this.notifyDataAdd(0);
   }
 
   // 在数据尾部增加一个元素
-  public addLastItem(): void {
-    this.dataArray.splice(this.dataArray.length, 0, this.dataArray.length)
-    this.notifyDataAdd(this.dataArray.length - 1)
+  public addLastItem(item: CardItem): void {
+    this.dataArray.push(item);
+    this.notifyDataAdd(this.dataArray.length - 1);
   }
 
   // 在指定索引位置增加一个元素
-  public addItem(index: number): void {
-    this.dataArray.splice(index, 0, this.dataArray.length)
-    this.notifyDataAdd(index)
+  public addItem(index: number, item: CardItem): void {
+    this.dataArray.splice(index, 0, item);
+    this.notifyDataAdd(index);
   }
 
   // 删除第一个元素
@@ -124,8 +234,7 @@ export class WaterFlowDataSource implements IDataSource {
 
   // 重新加载数据
   public reload(): void {
-    this.dataArray.splice(1, 1)
-    this.dataArray.splice(3, 2)
+    this.fetchDataFromBackend();
     this.notifyDataReload()
   }
 }

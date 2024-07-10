@@ -7,7 +7,9 @@ import { httpRequestPost } from '../common/api';
 import { LoginParams } from '../common/LoginParams';
 import { RegisterParams } from '../common/RegisterParams';
 import { SendCodeParams } from '../common/SendCodeParams';
-
+import promptAction from '@ohos.promptAction';
+import { JSON } from '@kit.ArkTS';
+import { ValueType } from '@kit.ArkData';
 
 @CustomDialog
 struct CustomDialogExample{
@@ -19,7 +21,7 @@ struct CustomDialogExample{
 
   build() {
     Column(){
-      TextInput({placeholder: '请输入用户名'}).onChange((value: string) => {
+      TextInput({placeholder: '请输入邮箱'}).onChange((value: string) => {
         this.username = value
       }).margin(20)
       TextInput({placeholder: '请输入密码'}).type(InputType.Password).onChange((value: string) => {
@@ -64,7 +66,6 @@ struct register{
   passwordAgain?: string
   email?: string
   authCode?: string
-  realCode?: string
 
   build() {
     Column(){
@@ -102,8 +103,7 @@ struct register{
           if(this.confirm){
             if(this.username != undefined && this.password != undefined && this.passwordAgain != undefined
               && this.username != '' && this.password != '' && this.passwordAgain != '' && this.email != undefined
-              && this.authCode != undefined && this.email != '' && this.authCode != '' && this.realCode != undefined
-              && this.realCode != ''){
+              && this.authCode != undefined && this.email != '' && this.authCode != ''){
               if(this.password != this.passwordAgain){
                 AlertDialog.show({
                   title: '警告',
@@ -111,15 +111,8 @@ struct register{
                   alignment: DialogAlignment.Bottom,
                   autoCancel: true,
                 })
-              }else if(this.authCode != this.realCode){
-                AlertDialog.show({
-                  title: '警告',
-                  message: '验证码错误',
-                  alignment: DialogAlignment.Bottom,
-                  autoCancel: true,
-                })
               }else{
-                this.confirm(this.username, this.password, this.email)
+                this.confirm(this.username, this.password, this.email, this.authCode)
               }
             }else{
               AlertDialog.show({
@@ -315,7 +308,7 @@ struct Index {
   build() {
     Column(){
       Stack({}){
-        Image($r("app.media.background1"))
+        Image($r('app.media.background1'))
         Row({space: 40}){
           Button('登录', { stateEffect: true })
             .onClick(() => {
