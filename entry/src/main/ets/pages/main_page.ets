@@ -9,37 +9,16 @@ import { http } from '@kit.NetworkKit';
 @Entry
 @Component
 struct Second {
-  @State cardItem: CardItem = new CardItem({} as CardItemInterface, 0)
+  @State cardItem: CardItem = new CardItem({} as CardItemInterface)
   @State minSize: number = 80
   @State maxSize: number = 180
   @State fontSize: number = 24
   @State colors: number[] = [0xFFC0CB, 0xDA70D6, 0x6B8E23, 0x6A5ACD, 0x00FFFF, 0x00FF7F]
   scroller: Scroller = new Scroller()
   dataSource: WaterFlowDataSource = new WaterFlowDataSource()
-  private itemWidthArray: number[] = []
-  private itemHeightArray: number[] = []
   private controller: TabsController = new TabsController();
   oldPassword?: string
   newPassword?: string
-
-  // 计算FlowItem宽/高
-  getSize() {
-    let ret = Math.floor(Math.random() * this.maxSize)
-    return (ret > this.minSize ? ret : this.minSize)
-  }
-
-
-  // 设置FlowItem的宽/高数组
-  setItemSizeArray() {
-    for (let i = 0; i < 100; i++) {
-      this.itemWidthArray.push(this.getSize())
-      this.itemHeightArray.push(this.getSize())
-    }
-  }
-
-  aboutToAppear() {
-    this.setItemSizeArray()
-  }
 
   @Builder
   itemFoot() {
@@ -61,76 +40,77 @@ struct Second {
         controller: this.controller,
       }) {
         TabContent() {
-          WaterFlow(){
-            LazyForEach(this.dataSource,(item:number)=>{
-              FlowItem() {
-                Column() {
-                  Row(){
+            WaterFlow(){
+              LazyForEach(this.dataSource,(item:CardItem,index:number)=>{
+                FlowItem() {
+                  Column() {
                     Row(){
-                      //this.CardItem.Image
-                      Image($r('app.media.icon'))
-                        .width($r('app.float.blog_icon_width'))
-                        .aspectRatio(1)
-                        .borderRadius($r('app.float.blog_icon_br'))
-                      Column(){
-                        Text('原神')
-                          .fontSize($r('app.float.blog_name_fs'))
-                          .fontWeight(500)
-                          .height($r('app.float.blog_name_height'))
-                        Text('米哈游')
-                          .fontWeight(FontWeight.Normal)
-                          .fontSize($r('app.float.author_type_fs'))
-                          .height($r('app.float.author_type_height'))
+                      Row(){
+                        //this.CardItem.Image
+                        Image($r('app.media.icon'))
+                          .width($r('app.float.blog_icon_width'))
+                          .aspectRatio(1)
+                          .borderRadius($r('app.float.blog_icon_br'))
+                        Column(){
+                          Text(item.name)
+                            .fontSize($r('app.float.blog_name_fs'))
+                            .fontWeight(500)
+                            .height($r('app.float.blog_name_height'))
+                            .fontColor('red')
+                          Text(item.authorType)
+                            .fontWeight(FontWeight.Normal)
+                            .fontSize($r('app.float.author_type_fs'))
+                            .height($r('app.float.author_type_height'))
+                            .fontColor('blue')
+                        }
+                        .margin({ left: $r('app.float.blog_title_ml') })
+                        .justifyContent(FlexAlign.Start)
+                        .alignItems(HorizontalAlign.Start)
                       }
-                      .margin({ left: $r('app.float.blog_title_ml') })
                       .justifyContent(FlexAlign.Start)
-                      .alignItems(HorizontalAlign.Start)
+                      // Row() {
+                      //   Text('关注')
+                      //     .fontSize($r('app.float.follow_font_size'))
+                      //     .margin({ left: $r('app.float.follow_margin_left') })
+                      // }
+                      // .borderRadius($r('app.float.blog_title_follow_br'))
+                      // .padding({
+                      //   left: $r('app.float.blog_title_padding_left'),
+                      //   right: $r('app.float.blog_title_padding_left')
+                      // })
+                      // .width($r('app.float.blog_title_follow_width'))
+                      // .height($r('app.float.blog_title_follow_height'))
                     }
-                    .justifyContent(FlexAlign.Start)
-                    // Row() {
-                    //   Text('关注')
-                    //     .fontSize($r('app.float.follow_font_size'))
-                    //     .margin({ left: $r('app.float.follow_margin_left') })
-                    // }
-                    // .borderRadius($r('app.float.blog_title_follow_br'))
-                    // .padding({
-                    //   left: $r('app.float.blog_title_padding_left'),
-                    //   right: $r('app.float.blog_title_padding_left')
-                    // })
-                    // .width($r('app.float.blog_title_follow_width'))
-                    // .height($r('app.float.blog_title_follow_height'))
-                  }
-                  .justifyContent(FlexAlign.SpaceBetween)
-                  .width("100%")
-                  .padding({
-                    top: $r('app.float.card_title_padding'),
-                    bottom: $r('app.float.card_title_padding')
-                  })
-                  Row() {
-                    //this.CardItem.Comment
-                    Text('《原神》是一款全新开放世界冒险RPG。你将在游戏中探索一个被称作「提瓦特」的幻想世界。绝区0也是一款非常好玩的游戏！！！！！！！')
-                      .fontSize(`fp`)
-                      .lineHeight(`vp`)
-                      .width("100%")
-                      .onClick(() => {
-                        //this.jumpDetail();
-                      })
-                      .copyOption(CopyOptions.LocalDevice)
-                      .fontColor("black")
+                    .justifyContent(FlexAlign.SpaceBetween)
+                    .width("100%")
+                    .padding({
+                      top: $r('app.float.card_title_padding'),
+                      bottom: $r('app.float.card_title_padding')
+                    })
+                    Row() {
+                      //this.CardItem.Comment
+                      //item.content.length > 100 ? `${item.content.substring(0, 100)}...` : item.content
+                      Text(item.content)
+                        .fontSize(`fp`)
+                        .lineHeight(`vp`)
+                        .width("100%")
+                        .onClick(() => {
+                          //this.jumpDetail();
+                        })
+                        .copyOption(CopyOptions.LocalDevice)
+                        .fontColor("black")
+                    }
                   }
                 }
-              }
-              .onAppear(()=>{
-                if (item + 20 == this.dataSource.totalCount()) {
-                  for (let i = 0; i < 100; i++) {
-                    this.dataSource.addLastItem()
+                .onAppear(()=>{
+                  if (index + 5 == this.dataSource.totalCount()) {
+                    this.dataSource.addLastItem(this.cardItem)
                   }
-                }
+                })
+                .width('100%')
+                .height('150')
               })
-              .width('100%')
-              .height(this.itemHeightArray[10])
-            }, (item: string) => item)
-          }
+            }
         }
         .size({width: "100%", height: "100%"})
         .tabBar("博客")
