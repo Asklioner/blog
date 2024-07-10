@@ -338,11 +338,7 @@ struct Index {
       (err: BusinessError, data: http.HttpResponse) => {
         if(!err){
           console.info('1')
-          console.info('返回结果: ' + data.result)
-          console.log(data.responseCode.toString())
-          console.log(JSON.stringify(data.result))
-          console.log(JSON.stringify(data.header))
-
+          //console.info('返回结果: ' + data.result)
           AppStorage.set("token",data.result);
           router.replaceUrl({
             url: 'pages/main_page'

@@ -3,15 +3,25 @@ import {CardItemInterface} from '../models/CardListModel'
 import {CardItem} from '../models/CardViewModel'
 import { http } from '@kit.NetworkKit';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { JSON } from '@kit.ArkTS';
-
+import { ArkTSUtils, JSON } from '@kit.ArkTS';
+import { lang } from '@kit.ArkTS';
 // 定义 CardItem 接口
 interface backCardItem {
-  icon: string;
-  name: string;
-  authorType: string;
+  id: number;
+  title: string;
+  authorId: number;
   content: string;
-  commentList: [];
+  likeCount:number,
+  commentCount:number,
+  createTime:string,
+  updateTime:string
+}
+
+interface parseDataInterface{
+  success:boolean,
+  code:number,
+  message:string,
+  data?:object
 }
 
 export class WaterFlowDataSource implements IDataSource {
@@ -25,32 +35,34 @@ export class WaterFlowDataSource implements IDataSource {
   // 从后端获取数据
   private fetchDataFromBackend(): void {
     //从后端获取数据
-    // let httpRequest = http.createHttp();
-    // httpRequest.request(
-    //   'http://192.168.5.18:8081/blog/all',
-    //   {
-    //     method:http.RequestMethod.GET,
-    //     expectDataType: http.HttpDataType.STRING
-    //   },
-    //   (err:BusinessError,data:http.HttpResponse)=>{
-    //     if (!err && data.resultType === http.HttpDataType.STRING) {
-    //       try {
-    //         let result = data.result.toString()
-    //         console.log(result)
-    //         let x = JSON.parse(result) as backCardItem[]
-    //         const backendData:backCardItem[] = x
-    //         this.dataArray = backendData
-    //         console.log('Received cards:', this.dataArray)
-    //         httpRequest.destroy()
-    //       } catch (error) {
-    //         console.error('Error parsing JSON:', error);
-    //         httpRequest.destroy()
-    //       }
-    //     }else{
-    //       httpRequest.destroy()
-    //     }
-    //   }
-    // )
+    let httpRequest = http.createHttp();
+    httpRequest.request(
+      'http://192.168.5.18:8081/blog/all',
+      {
+        method:http.RequestMethod.GET,
+        expectDataType: http.HttpDataType.STRING,
+        header: {
+          'Content-Type': 'application/json',
+        }
+      },
+      (err:BusinessError,data:http.HttpResponse)=>{
+        if (!err && data.resultType === http.HttpDataType.STRING) {
+          try {
+            console.log("responseCode is ...");
+            console.log(data.result.toLocaleString())
+            const parseDate = JSON.parse(data.result.toString()) as parseDataInterface
+            console.info(data.result.toString()+'#######')
+            console.log('Received cards:', this.dataArray)
+            httpRequest.destroy()
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            httpRequest.destroy()
+          }
+        }else{
+          httpRequest.destroy()
+        }
+      }
+    )
     // 模拟从后端获取数据
     const newData: CardItemInterface[] = [
       {
