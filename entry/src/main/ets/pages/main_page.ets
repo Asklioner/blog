@@ -1,4 +1,3 @@
-
 import { router } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
 import {CommonConstants} from '../entryability/CommonConstants'
@@ -6,6 +5,37 @@ import {CardItemInterface} from '../models/CardListModel'
 import { CardItem } from '../models/CardViewModel'
 import { WaterFlowDataSource } from '../entryability/WaterFlowDataSource'
 import { http } from '@kit.NetworkKit';
+import picker from '@ohos.file.picker';
+import fs from '@ohos.file.fs';
+import common from '@ohos.app.ability.common';
+import promptAction from '@ohos.promptAction';
+
+
+@CustomDialog
+struct exchangeUsername{
+  confirm?: (username?: string) => void
+  controller?: CustomDialogController
+  username?: string
+
+  build() {
+    Column({space: 10}){
+      TextInput({placeholder: '请输入用户名'}).onChange((value) => {
+        this.username = value
+      })
+      Button('修改').onClick(() => {
+        if(this.confirm){
+          this.confirm(this.username)
+        }
+        if(this.controller){
+          this.controller.close()
+        }
+      })
+    }.margin(20)
+  }
+}
+
+
+
 @Entry
 @Component
 struct Second {
@@ -19,6 +49,13 @@ struct Second {
   private controller: TabsController = new TabsController();
   oldPassword?: string
   newPassword?: string
+  exchangeUsername: CustomDialogController = new CustomDialogController({
+    builder: exchangeUsername({
+      confirm: (username?: string) => {this.onConfirm(username)}
+    })
+  })
+  @State icon: Resource = $r('app.media.icon')
+  @State username: string = '123'
 
   @Builder
   itemFoot() {
@@ -32,6 +69,41 @@ struct Second {
         .margin({ top: 2 })
     }
   }
+
+  onConfirm(username?: string){
+    let httpRequest = http.createHttp()
+    httpRequest.request(
+      '/user',
+      {
+        method: http.RequestMethod.PUT,
+        header: {
+          'Content-Type': 'multipart/form-data',
+        },
+        multiFormDataList: [
+          {
+            name: "name",
+            contentType: 'text/plain',
+            data: username,
+          }
+        ],
+      },
+      (err, data) => {
+        if(!err){
+          promptAction.showToast({
+            message: '修改成功',
+            duration: 2000
+          });
+        }else{
+          promptAction.showToast({
+            message: '修改失败',
+            duration: 2000
+          });
+        }
+      }
+    )
+  }
+
+
 
   build() {
     Column() {
@@ -118,31 +190,76 @@ struct Second {
         TabContent() {
           Column({space: 20}){
             Flex({ direction: FlexDirection.Row }){
-              Image($r('app.media.icon')).width('30%').margin({right: 30})
+              Image(this.icon).width('30%').margin({right: 30}).onClick(() => {
+                const documentSelectOptions = new picker.DocumentSelectOptions()
+                documentSelectOptions.maxSelectNumber = 1
+                documentSelectOptions.fileSuffixFilters = ['.png', '.jpg'];
+                let uris: Array<string> = [];
+                let context = getContext(this) as common.Context;
+                const documentViewPicker = new picker.DocumentViewPicker(context);
+                documentViewPicker.select(documentSelectOptions).then((documentSelectResult: Array<string>) => {
+                  uris = documentSelectResult;
+                  console.info('documentViewPicker.select to file succeed and uris are:' + uris);
+                }).catch((err: BusinessError) => {
+                  console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);
+                })
+                let file = fs.openSync(uris[0], fs.OpenMode.READ_ONLY)
+                let buffer = new ArrayBuffer(4096 * 4)
+                let readLen = fs.readSync(file.fd, buffer)
+                fs.closeSync(file)
+                let httpRequest = http.createHttp()
+                httpRequest.request(
+                  '/user',
+                  {
+                    method: http.RequestMethod.PUT,
+                    header: {
+                      'Content-Type': 'multipart/form-data',
+                    },
+                    multiFormDataList: [
+                      {
+                        name: "icon",
+                        contentType: 'text/plain',
+                        data: readLen,
+                      }
+                    ],
+                  }
+                )
+              })
               //Text(this.CardItem.name).fontSize(40).margin({top: 20})
-              Text('用户名').fontSize(40).margin({top: 20})
+              Text(this.username).fontSize(40).margin({top: 20}).onClick(() => {
+                this.exchangeUsername.open()
+              })
             }.margin(20)
+
+
             TextInput({placeholder: '旧密码'}).onChange((value: string) => {
               this.oldPassword = value
             })
             TextInput({placeholder: '新密码'}).onChange((value: string) => {
               this.newPassword = value
             })
-            Button('修改').onClick(() => {
+            Button('修改密码').onClick(() => {
               let httpRequest = http.createHttp()
               httpRequest.request(
-                'url',
+                '/user/password',
                 {
-                  method: http.RequestMethod.POST,
+                  method: http.RequestMethod.PUT,
                   //要加用户名
-                  extraData: [this.oldPassword, this.newPassword]
+                  extraData: this.newPassword
+
                 },
                 (err: BusinessError, data: http.HttpResponse) => {
                   if(!err){
-                    //错误码
+                    promptAction.showToast({
+                      message: '修改成功',
+                      duration: 2000
+                    });
                     httpRequest.destroy()
                   }else{
-                    console.log('请求失败')
+                    promptAction.showToast({
+                      message: '修改失败',
+                      duration: 2000
+                    });
                     httpRequest.destroy()
                   }
                 }

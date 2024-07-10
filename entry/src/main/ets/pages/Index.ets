@@ -1,6 +1,9 @@
 import router from '@ohos.router';
 import { http } from '@kit.NetworkKit';
 import { BusinessError } from '@kit.BasicServicesKit';
+import promptAction from '@ohos.promptAction';
+import { JSON } from '@kit.ArkTS';
+import { ValueType } from '@kit.ArkData';
 
 
 @CustomDialog
@@ -14,7 +17,7 @@ struct CustomDialogExample{
 
   build() {
     Column(){
-      TextInput({placeholder: '请输入用户名'}).onChange((value: string) => {
+      TextInput({placeholder: '请输入邮箱'}).onChange((value: string) => {
         this.username = value
       }).margin(20)
       TextInput({placeholder: '请输入密码'}).type(InputType.Password).onChange((value: string) => {
@@ -52,14 +55,13 @@ struct CustomDialogExample{
 @CustomDialog
 struct register{
   cancel?: () => void
-  confirm?: (username?: string, password?: string, email?: string,) => void
+  confirm?: (username?: string, password?: string, email?: string, authCode?: string) => void
   controller?: CustomDialogController
   username?: string
   password?: string
   passwordAgain?: string
   email?: string
   authCode?: string
-  realCode?: string
 
   build() {
     Column(){
@@ -78,22 +80,29 @@ struct register{
             this.email = value
           }).width('70%').margin({right: 20})
           Button('发送').onClick(() => {
-            //发送验证码
             let httpRequest = http.createHttp()
             httpRequest.request(
-              //路由待定
-              "url",
+              "/user/code",
               {
                 method: http.RequestMethod.POST,
                 extraData: this.email,
-                expectDataType: http.HttpDataType.STRING
               },
               (err: BusinessError, data: http.HttpResponse) => {
                 if(!err){
-                  this.realCode = JSON.stringify(data.result)
+                  if(JSON.parse(data.result.toString())){
+                    promptAction.showToast({
+                      message: '发送成功',
+                      duration: 2000
+                    });
+                  }else{
+                    promptAction.showToast({
+                      message: '发送失败',
+                      duration: 2000
+                    });
+                  }
                   httpRequest.destroy()
                 }else{
-                  console.info('error:' + JSON.stringify(err))
+                  console.info('发送失败')
                   httpRequest.destroy()
                 }
               }
@@ -109,8 +118,7 @@ struct register{
           if(this.confirm){
             if(this.username != undefined && this.password != undefined && this.passwordAgain != undefined
               && this.username != '' && this.password != '' && this.passwordAgain != '' && this.email != undefined
-              && this.authCode != undefined && this.email != '' && this.authCode != '' && this.realCode != undefined
-              && this.realCode != ''){
+              && this.authCode != undefined && this.email != '' && this.authCode != ''){
               if(this.password != this.passwordAgain){
                 AlertDialog.show({
                   title: '警告',
@@ -118,15 +126,8 @@ struct register{
                   alignment: DialogAlignment.Bottom,
                   autoCancel: true,
                 })
-              }else if(this.authCode != this.realCode){
-                AlertDialog.show({
-                  title: '警告',
-                  message: '验证码错误',
-                  alignment: DialogAlignment.Bottom,
-                  autoCancel: true,
-                })
               }else{
-                this.confirm(this.username, this.password, this.email)
+                this.confirm(this.username, this.password, this.email, this.authCode)
               }
             }else{
               AlertDialog.show({
@@ -272,8 +273,8 @@ struct Index {
   register: CustomDialogController = new CustomDialogController({
     builder: register({
       cancel: () => {},
-      confirm: (username?: string, password?: string, email?: string) =>
-      {this.onRegister(username, password, email)}
+      confirm: (username?: string, password?: string, email?: string, authCode?: string) =>
+      {this.onRegister(username, password, email, authCode)}
     })
   })
 
@@ -286,20 +287,28 @@ struct Index {
     })
   })
 
-  onRegister(username?: string, password?: string, email?: string){
+
+  onRegister(username?: string, password?: string, email?: string, code?: string){
     //注册
     let httpRequest = http.createHttp()
     httpRequest.request(
-      'url',
+      '/user/register',
       {
         method: http.RequestMethod.POST,
-        extraData: [username, password, email],
+        extraData: [email, username, password, code],
       },
       (err: BusinessError, data: http.HttpResponse) => {
         if(!err){
-          //错误码
+          promptAction.showToast({
+              message: '注册成功',
+              duration: 2000
+          })
+          httpRequest.destroy()
         }else{
-          console.log('注册失败')
+          promptAction.showToast({
+            message: '注册失败',
+            duration: 2000
+          })
           httpRequest.destroy()
         }
       }
@@ -307,27 +316,46 @@ struct Index {
   }
 
   onConfirm(username?: string, password?: string){
+    this.dialogController.close()
+    // router.replaceUrl({
+    //   url: 'pages/main_page'
+    // }, router.RouterMode.Standard)
+
     //登录提交请求
     let httpRequest = http.createHttp()
-    router.replaceUrl({
-      url: 'pages/main_page'
-    }, router.RouterMode.Standard)
     httpRequest.request(
-      'url',
+      'http://192.168.5.18:8081/user/login',
       {
         method: http.RequestMethod.POST,
-        extraData: [username, password]
+        extraData: {
+          'email':'610759768@qq.com',
+          'password':'zhaokedi1'
+        },
+        header: {
+        'Content-Type': 'application/json',
+      },
       },
       (err: BusinessError, data: http.HttpResponse) => {
         if(!err){
-          //错误码
+          console.info('1')
+          console.info('返回结果: ' + data.result)
+          console.log(data.responseCode.toString())
+          console.log(JSON.stringify(data.result))
+          console.log(JSON.stringify(data.header))
 
-          //正确时
+          AppStorage.set("token",data.result);
           router.replaceUrl({
-            url: 'pages/Setting'
+            url: 'pages/main_page'
           }, router.RouterMode.Standard)
+          this.dialogController.close()
+
+          httpRequest.destroy()
         }else{
-          console.log('登陆失败')
+          promptAction.showToast({
+            message: '账号或密码错误',
+            duration: 2000
+          })
+          httpRequest.destroy()
         }
       }
     )
@@ -357,7 +385,7 @@ struct Index {
   build() {
     Column(){
       Stack({}){
-        Image($r("app.media.background1"))
+        Image($r('app.media.background1'))
         Row({space: 40}){
           Button('登录', { stateEffect: true })
             .onClick(() => {

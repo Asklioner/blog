@@ -3,6 +3,7 @@ import {CardItemInterface} from '../models/CardListModel'
 import {CardItem} from '../models/CardViewModel'
 import { http } from '@kit.NetworkKit';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { JSON } from '@kit.ArkTS';
 
 // 定义 CardItem 接口
 interface backCardItem {
@@ -26,16 +27,18 @@ export class WaterFlowDataSource implements IDataSource {
     //从后端获取数据
     // let httpRequest = http.createHttp();
     // httpRequest.request(
-    //   'url',
+    //   'http://192.168.5.18:8081/blog/all',
     //   {
     //     method:http.RequestMethod.GET,
-    //     //指定返回数组
     //     expectDataType: http.HttpDataType.STRING
     //   },
     //   (err:BusinessError,data:http.HttpResponse)=>{
     //     if (!err && data.resultType === http.HttpDataType.STRING) {
     //       try {
-    //         const backendData:backCardItem[] = JSON.parse(data.result as string);
+    //         let result = data.result.toString()
+    //         console.log(result)
+    //         let x = JSON.parse(result) as backCardItem[]
+    //         const backendData:backCardItem[] = x
     //         this.dataArray = backendData
     //         console.log('Received cards:', this.dataArray)
     //         httpRequest.destroy()

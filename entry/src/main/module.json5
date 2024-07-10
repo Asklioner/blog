@@ -1,5 +1,13 @@
 {
   "module": {
+    "requestPermissions":[
+      {
+        "name" : "ohos.permission.INTERNET",
+        "usedScene": {
+          "when": "always"
+        }
+      }
+      ],
     "name": "entry",
     "type": "entry",
     "description": "$string:module_desc",
@@ -48,7 +56,8 @@
             "resource": "$profile:backup_config"
           }
         ],
-      }
+      },
+
     ]
   }
 }
