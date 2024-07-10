@@ -4,8 +4,9 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { Response } from '../common/Response';
 import { LoginData } from '../common/LoginData';
 import { httpRequestPost } from '../common/api';
-import { Params } from '../common/params';
 import { LoginParams } from '../common/LoginParams';
+import { RegisterParams } from '../common/RegisterParams';
+import { SendCodeParams } from '../common/SendCodeParams';
 
 
 @CustomDialog
@@ -15,7 +16,6 @@ struct CustomDialogExample{
   controller?: CustomDialogController
   username?: string
   password?: string
-
 
   build() {
     Column(){
@@ -57,7 +57,7 @@ struct CustomDialogExample{
 @CustomDialog
 struct register{
   cancel?: () => void
-  confirm?: (username?: string, password?: string, email?: string,) => void
+  confirm?: (username?: string, password?: string, email?: string,code?: string) => void
   controller?: CustomDialogController
   username?: string
   password?: string
@@ -83,26 +83,14 @@ struct register{
             this.email = value
           }).width('70%').margin({right: 20})
           Button('发送').onClick(() => {
-            //发送验证码
-            let httpRequest = http.createHttp()
-            httpRequest.request(
-              //路由待定
-              "url",
-              {
-                method: http.RequestMethod.POST,
-                extraData: this.email,
-                expectDataType: http.HttpDataType.STRING
-              },
-              (err: BusinessError, data: http.HttpResponse) => {
-                if(!err){
-                  this.realCode = JSON.stringify(data.result)
-                  httpRequest.destroy()
-                }else{
-                  console.info('error:' + JSON.stringify(err))
-                  httpRequest.destroy()
-                }
-              }
-            )
+            console.log('注册邮箱');
+            if(this.email != undefined && this.email != ''){
+              let sendCodeParams:SendCodeParams = new SendCodeParams(this.email);
+              let response = httpRequestPost("/user/code",sendCodeParams);
+              response.then((res)=>{
+              }).catch((err:BusinessError)=>{
+                console.log('验证码发送失败')
+              })}
           }).width('30%')
         }
       }.margin(20)
@@ -185,28 +173,6 @@ struct Forget{
             this.email = value
           }).width('70%').margin({right: 20})
           Button('发送').onClick(() => {
-            if(this.email != undefined && this.email != ''){
-              let httpRequest = http.createHttp()
-              httpRequest.request(
-                //路由待定
-                "url",
-                {
-                  method: http.RequestMethod.POST,
-                  extraData: this.email,
-                  expectDataType: http.HttpDataType.STRING
-                },
-                (err: BusinessError, data: http.HttpResponse) => {
-                  if(!err){
-                    this.realCode = JSON.stringify(data.result)
-                    httpRequest.destroy()
-                  }else{
-                    console.info('error:' + JSON.stringify(err))
-                    httpRequest.destroy()
-                  }
-                }
-              )
-            }
-
           }).width('30%')
         }
       }.margin(20)
@@ -277,8 +243,8 @@ struct Index {
   register: CustomDialogController = new CustomDialogController({
     builder: register({
       cancel: () => {},
-      confirm: (username?: string, password?: string, email?: string) =>
-      {this.onRegister(username, password, email)}
+      confirm: (username?: string, password?: string, email?: string,code?: string) =>
+      {this.onRegister(username ?? "", password ?? " ", email ?? "", code ?? "")}
     })
   })
 
@@ -291,24 +257,20 @@ struct Index {
     })
   })
 
-  onRegister(username?: string, password?: string, email?: string){
-    //注册
-    let httpRequest = http.createHttp()
-    httpRequest.request(
-      'url',
-      {
-        method: http.RequestMethod.POST,
-        extraData: [username, password, email],
-      },
-      (err: BusinessError, data: http.HttpResponse) => {
-        if(!err){
-          //错误码
-        }else{
-          console.log('注册失败')
-          httpRequest.destroy()
-        }
-      }
-    )
+  onRegister(username: string, password: string, email: string,code:string){
+    let registerParams:RegisterParams = new RegisterParams(email,password,username,code);
+    let response = httpRequestPost("/user/register",registerParams);
+    response.then((res)=>{
+      let response:Response<LoginData> = JSON.parse(res.result.toString());
+      let token = response.data?.token;
+      AppStorage.set("token",token);
+      console.log(token);
+      router.replaceUrl({
+        url: 'pages/main_page'
+      }, router.RouterMode.Standard)
+    }).catch((err:BusinessError)=>{
+      console.log('注册失败')
+    })
   }
 
   onConfirm(email: string, password: string){
@@ -320,9 +282,11 @@ struct Index {
       let token = response.data?.token;
       AppStorage.set("token",token);
       console.log(token);
-      router.replaceUrl({
-        url: 'pages/main_page'
-      }, router.RouterMode.Standard)
+      if(response.code === "200"){
+        router.replaceUrl({
+          url: 'pages/main_page'
+        }, router.RouterMode.Standard)
+      }
     }).catch((err:BusinessError)=>{
       console.log('登陆失败')
     })
