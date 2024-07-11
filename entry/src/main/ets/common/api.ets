@@ -2,7 +2,7 @@
 import { http } from '@kit.NetworkKit';
 import { Params } from './params';
 
-const BASE_URL: string = 'http://127.0.0.1:8081';//这里写接口地址
+const BASE_URL: string = 'http://43.142.182.70:8081';//这里写接口地址
 
 
 export function httpRequestDel(url: string,params: Params) {
@@ -53,6 +53,7 @@ export function httpRequestGet(url: string) {
   url = BASE_URL+url
   let httpRequest = http.createHttp();
   const  token = AppStorage.get("token") as string
+  console.log("token test is ..."+token)
   let responseResult = httpRequest.request(url, {
     method: http.RequestMethod.GET,
     header: {

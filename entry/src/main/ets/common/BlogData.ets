@@ -1,23 +1,19 @@
-export class  Card {
-  id?: number;
-  icon?:string;
-  author?:string;
+export class  list {
+  id?: string;
   title?: string;
-  authorId?: number;
+  authorId?: string;
+  authorName?:string;
+  authorIcon?:string;
   content?: string;
-  likeCount?: number;
-  commentCount?: number;
+  likeCount?: string;
+  commentCount?: string;
   createTime?: string;
   updateTime?: string;
 }
-
-export class  CardListData extends Card {
-  list?: Card[];
-  constructor(list:Card[]) {
-    super()
-    this.list = list
-  }
+export class Card{
+  list?:list[]
 }
+
 
 
 

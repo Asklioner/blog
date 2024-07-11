@@ -3,12 +3,14 @@ import {CardItemInterface} from '../models/CardListModel'
 import {CardItem} from '../models/CardViewModel'
 import { http } from '@kit.NetworkKit';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { ArkTSUtils, JSON } from '@kit.ArkTS';
+import { ArkTSUtils,List } from '@kit.ArkTS';
 import { lang } from '@kit.ArkTS';
 import { LoginParams } from '../common/LoginParams';
 import { httpRequestGet, httpRequestPost } from '../common/api';
-import { Card, CardListData } from '../common/BlogData';
+import { Card, list } from '../common/BlogData';
 import { Response } from '../common/Response';
+
+
 export class WaterFlowDataSource implements IDataSource {
   private dataArray: CardItem[] = [];
   private listeners: DataChangeListener[] = []
@@ -17,18 +19,15 @@ export class WaterFlowDataSource implements IDataSource {
     this.fetchDataFromBackend();
   }
 
-  private  mapCardListDataToCardItem = (cardListData: CardListData[]): CardItem[] => {
-    return cardListData.map(cardData => {
-      const cardItems: CardItem[] = (cardData.list || []).map(card => {
-        return new CardItem({
-          icon: card.icon||'',
-          name: card.title || '',
-          authorType: card.author||'',
-          content: card.content || '',
-        });
+    private  mapCardListToCardItemList = (cardList: list[]): CardItem[] => {
+    return cardList.map(card => {
+      return new CardItem({
+        icon: card.authorIcon||'',
+        name: card.title || '',
+        authorType: card.authorName||'',
+        content: card.content || '',
       });
-      return cardItems;
-    }).flat();
+    });
   };
 
   // 从后端获取数据
@@ -36,9 +35,11 @@ export class WaterFlowDataSource implements IDataSource {
     //从后端获取数据
     let response = httpRequestGet('/blog/all')
     response.then((res)=>{
-      let responseData:Response<CardListData> = JSON.parse(res.result.toString()) as object
-      if (responseData.code=='200'){
-        const data: CardItem[] = this.mapCardListDataToCardItem((responseData.data?.list)||[]);
+      console.info('Result:' +res.result);
+      let response:Response<Card> = JSON.parse(res.result.toString()) as Response<Card>
+      console.log(response.success)
+      if (response.code=='200'){
+        const data: CardItem[] = this.mapCardListToCardItemList((response.data?.list)||[]);
         this.dataArray = data
       }
     })
