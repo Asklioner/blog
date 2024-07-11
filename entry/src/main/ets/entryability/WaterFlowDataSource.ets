@@ -18,19 +18,17 @@ export class WaterFlowDataSource implements IDataSource {
   }
 
   private  mapCardListDataToCardItem = (cardListData: CardListData[]): CardItem[] => {
-    const defaultIcon: ResourceStr = 'src/main/ets/image/kmxo6gb2.png';
-    const defaultAuthorType = '原神啊原神';
     return cardListData.map(cardData => {
       const cardItems: CardItem[] = (cardData.list || []).map(card => {
         return new CardItem({
-          icon: defaultIcon,
+          icon: card.icon||'',
           name: card.title || '',
-          authorType: defaultAuthorType,
+          authorType: card.author||'',
           content: card.content || '',
         });
       });
       return cardItems;
-    }).flat(); // 使用 flat 将嵌套数组平铺成单个数组
+    }).flat();
   };
 
   // 从后端获取数据

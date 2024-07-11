@@ -1,5 +1,7 @@
 export class  Card {
   id?: number;
+  icon?:string;
+  author?:string;
   title?: string;
   authorId?: number;
   content?: string;
